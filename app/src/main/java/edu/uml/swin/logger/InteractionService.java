@@ -8,7 +8,7 @@ import android.util.Log;
 
 public class InteractionService extends AccessibilityService {
 
-    static final String TAG = "RecorderService";
+    static final String TAG = "InteractionService";
 
     private String getEventType(AccessibilityEvent event) {
         switch (event.getEventType()) {
