@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeViewClicked"
-    android:accessibilityFlags="flagDefault"
+    android:accessibilityEventTypes="typeAllMask"
+    android:packageNames="com.skcc.corfire.dd,com.example.android.notepad,com.android.launcher"
+    android:accessibilityFlags="flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:canRetrieveWindowContent="true"
     android:canRequestTouchExplorationMode="true"
     android:canRequestEnhancedWebAccessibility="true"
  />
+ <!--android:accessibilityEventTypes="typeViewClicked|typeViewLongClicked|typeViewScrolled|typeViewTextChanged|typeViewTextSelectionChanged|typeViewFocused|typeViewSelected|typeViewHoverEnter|typeViewHoverExit"-->
