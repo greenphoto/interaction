@@ -2,7 +2,6 @@
 
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
-    android:packageNames="com.skcc.corfire.dd,com.example.android.notepad,com.android.launcher"
     android:accessibilityFlags="flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:canRetrieveWindowContent="true"
@@ -10,3 +9,4 @@
     android:canRequestEnhancedWebAccessibility="true"
  />
  <!--android:accessibilityEventTypes="typeViewClicked|typeViewLongClicked|typeViewScrolled|typeViewTextChanged|typeViewTextSelectionChanged|typeViewFocused|typeViewSelected|typeViewHoverEnter|typeViewHoverExit"-->
+ <!--android:packageNames="com.skcc.corfire.dd,com.example.android.notepad,com.android.launcher"-->

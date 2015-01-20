@@ -7,9 +7,14 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.io.IOException;
+
 public class InteractionService extends AccessibilityService {
 
     static final String TAG = "InteractionService";
+    private AccLogger accLogger;
+    private String[] pkgNames = {"com.skcc.corfire.dd","com.example.android.notepad","com.android.launcher"};
+
 
     private String getEventType(AccessibilityEvent event) {
         switch (event.getEventType()) {
@@ -42,7 +47,7 @@ public class InteractionService extends AccessibilityService {
             case AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED:
                 return "TYPE_VIEW_TEXT_SELECTION_CHANGED";
         }
-        return "Default";
+        return "DEFAULT_EVENT";
     }
 
     private String getEventText(AccessibilityEvent event) {
@@ -54,32 +59,8 @@ public class InteractionService extends AccessibilityService {
     }
 
     @Override
-    protected boolean onGesture(int gestureId){
-//        switch (gestureId){
-//            case GESTURE_SWIPE_DOWN:
-//                Log.v(TAG, "GESTURE_SWIPE_DOWN");
-//            case GESTURE_SWIPE_UP:
-//                Log.v(TAG, "GESTURE_SWIPE_UP");
-//            case GESTURE_SWIPE_LEFT:
-//                Log.v(TAG,"GESTURE_SWIPE_LEFT");
-//            case GESTURE_SWIPE_RIGHT:
-//                Log.v(TAG,"GESTURE_SWIPE_RIGHT");
-//            default:
-//                Log.v(TAG,"Other gestures.");
-//        }
-        Log.v(TAG, String.format("Gesture Id: %s", gestureId));
-        return true;
-    }
-
-    @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 //        if(getEventType(event).equalsIgnoreCase("Default")) return;
-        if(getEventType(event).equalsIgnoreCase("TYPE_WINDOW_CONTENT_CHANGED")) return;
-        Log.v(TAG, String.format(
-                "[type] %s [class] %s [package] %s [time] %s [text] %s [windowId] %s",
-                getEventType(event), event.getClassName(), event.getPackageName(),
-                event.getEventTime(), getEventText(event), event.getWindowId()));
-
         AccessibilityNodeInfo source = event.getSource();
         if(source == null){
             Log.v(TAG, "Failed to get source.");
@@ -97,7 +78,32 @@ public class InteractionService extends AccessibilityService {
             Log.v(TAG,"--------------parents------------------");
         }
 
-        if(getEventType(event).equalsIgnoreCase("TYPE_VIEW_CLICKED")) {
+        String eType = getEventType(event);
+        String cName = event.getClassName().toString();
+        String pName = event.getPackageName().toString();
+        long timeStamp = event.getEventTime();
+        String eText = getEventText(event);
+        int windowId = event.getWindowId();
+
+        if(getEventType(event).equalsIgnoreCase("TYPE_WINDOW_CONTENT_CHANGED")) return;
+
+        Log.v(TAG, String.format(
+                "[type] %s [class] %s [package] %s [time] %s [text] %s [windowId] %s",
+                eType, cName, pName, timeStamp, eText, windowId));
+        /**
+         * Invoke AccLogger if the launched activity is in monitored packages.
+         */
+        if (eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
+            if(isMonitored(pName, pkgNames)){
+                this.accLogger.start();
+            }
+            else{
+                this.accLogger.stop();
+            }
+        }
+
+
+        if(eType.equalsIgnoreCase("TYPE_VIEW_CLICKED")) {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if(rootNode == null){
                 Log.v(TAG,"Root node info is null.");
@@ -111,7 +117,14 @@ public class InteractionService extends AccessibilityService {
         source.recycle();
     }
 
-    public void recycle(AccessibilityNodeInfo info, int level) {
+    protected boolean isMonitored(String pName, String[] pkgNames){
+        for(int i=0; i<pkgNames.length;i++){
+            if(pName.equalsIgnoreCase(pkgNames[i])) return true;
+        }
+        return false;
+    }
+
+    protected void recycle(AccessibilityNodeInfo info, int level) {
         String levelInfo = generateLevel(level);
         Log.i(TAG, levelInfo+ "[ClassName] "+ info.getClassName()+" [Text] "+ info.getText() + " [WINDOW_ID] "+ info.getWindowId());
 
@@ -142,10 +155,30 @@ public class InteractionService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         Log.v(TAG, "onServiceConnected");
-//        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-//        info.flags = AccessibilityServiceInfo.DEFAULT;
-//        info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
-//        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
-//        setServiceInfo(info);
+        try {
+            accLogger = new AccLogger(this);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    private String getPkgNames(String[] names){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < names.length; ++i){
+            sb.append(names[i]);
+            if(i != names.length-1){
+                sb.append("|");
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public void onDestroy(){
+        if(accLogger != null){
+            accLogger.stop();
+        }
     }
 }
