@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * Created by jing on 1/19/15.
  */
 public class AccLogger extends Task {
-    private static final String TAG = "AccLogger";
+    private static final String TAG = "InteractionService/AccLogger";
     private static final String APP_DIR = "AccessibilityData";
     private SensorManager sensorManager;
     private Sensor senAccelerometer;

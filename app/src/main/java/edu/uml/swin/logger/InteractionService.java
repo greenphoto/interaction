@@ -13,7 +13,7 @@ public class InteractionService extends AccessibilityService {
 
     static final String TAG = "InteractionService";
     private AccLogger accLogger;
-    private String[] pkgNames = {"com.skcc.corfire.dd","com.example.android.notepad","com.android.launcher"};
+    private String[] pkgNames = {"com.skcc.corfire.dd","com.example.android.notepad"};
 
 
     private String getEventType(AccessibilityEvent event) {
@@ -47,7 +47,7 @@ public class InteractionService extends AccessibilityService {
             case AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED:
                 return "TYPE_VIEW_TEXT_SELECTION_CHANGED";
         }
-        return "DEFAULT_EVENT";
+        return "OTHER_EVENT";
     }
 
     private String getEventText(AccessibilityEvent event) {
@@ -66,26 +66,39 @@ public class InteractionService extends AccessibilityService {
             Log.v(TAG, "Failed to get source.");
             return;
         }
-        else{
-            Log.v(TAG, String.format("[SourceClass] %s [ViewId] %s",
-                    source.getClassName().toString(), source.getViewIdResourceName()));
-            Log.v(TAG,"--------------parents------------------");
-            AccessibilityNodeInfo parent = source.getParent();
-            while(parent!=null) {
-                Log.v(TAG, parent.getClassName().toString());
-                parent = parent.getParent();
+        String eType = getEventType(event);
+//        //Ingore "TYPE_WINDOW_CONTENT_CHANGED" event
+//        if(getEventType(event).equalsIgnoreCase("TYPE_WINDOW_CONTENT_CHANGED")) return;
+
+        /*
+         *If the event came from an new unmonitored package, stop accLogger and skip
+          */
+        String pName = event.getPackageName().toString();
+        if(!isMonitored(pName,pkgNames)){
+            if(eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
+                this.accLogger.stop();
             }
-            Log.v(TAG,"--------------parents------------------");
+            else{
+                this.accLogger.stop();
+                return;
+            }
         }
 
-        String eType = getEventType(event);
         String cName = event.getClassName().toString();
-        String pName = event.getPackageName().toString();
         long timeStamp = event.getEventTime();
         String eText = getEventText(event);
         int windowId = event.getWindowId();
 
-        if(getEventType(event).equalsIgnoreCase("TYPE_WINDOW_CONTENT_CHANGED")) return;
+        Log.v(TAG, String.format("[SourceClass] %s [ViewId] %s",
+                source.getClassName().toString(), source.getViewIdResourceName()));
+        Log.v(TAG,"--------------parents------------------");
+        AccessibilityNodeInfo parent = source.getParent();
+        while(parent!=null) {
+            Log.v(TAG, parent.getClassName().toString());
+            parent = parent.getParent();
+        }
+        Log.v(TAG,"--------------parents------------------");
+
 
         Log.v(TAG, String.format(
                 "[type] %s [class] %s [package] %s [time] %s [text] %s [windowId] %s",
@@ -101,8 +114,6 @@ public class InteractionService extends AccessibilityService {
                 this.accLogger.stop();
             }
         }
-
-
         if(eType.equalsIgnoreCase("TYPE_VIEW_CLICKED")) {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if(rootNode == null){
@@ -140,7 +151,7 @@ public class InteractionService extends AccessibilityService {
     private String generateLevel(int level){
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < level; ++i){
-            sb.append(">--");
+            sb.append("--");
         }
 
         return sb.toString();
