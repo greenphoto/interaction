@@ -55,10 +55,10 @@ public class InteractionService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         Log.v(TAG, "onServiceConnected");
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.flags = AccessibilityServiceInfo.DEFAULT;
-        info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
-        setServiceInfo(info);
+//        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+////        info.flags = AccessibilityServiceInfo.DEFAULT;
+////        info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
+////        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+//        setServiceInfo(info);
     }
 }
