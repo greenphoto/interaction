@@ -91,7 +91,7 @@ public class AccLogger extends Task {
             Log.v(TAG, "acc File exists.");
         }
         else{
-            Log.v(TAG, "acc File does not exist.");
+            Log.v(TAG, "acc File does not exist and to be created.");
         }
         try {
             pw = new PrintWriter(new FileOutputStream(outputFile));
