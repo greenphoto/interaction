@@ -6,9 +6,11 @@ import android.graphics.Rect;
 import android.view.accessibility.AccessibilityEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.util.Log;
+import android.os.Build;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.io.IOException;
+
 
 public class InteractionService extends AccessibilityService {
 
@@ -31,15 +33,15 @@ public class InteractionService extends AccessibilityService {
          *If the event came from an new unmonitored package, stop accLogger and skip
           */
         String pName = event.getPackageName().toString();
-/*        if(!isMonitored(pName,pkgNames)){
+        if(!isMonitored(pName,pkgNames)){
             if(eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
-                this.accLogger.stop();
+//                this.accLogger.stop();
             }
             else{
-                this.accLogger.stop();
+//                this.accLogger.stop();
                 return;
             }
-        }*/
+        }
 
         String cName = event.getClassName().toString();
         long timeStamp = event.getEventTime();
@@ -60,9 +62,11 @@ public class InteractionService extends AccessibilityService {
         source.getBoundsInParent(boundsInParent);
         source.getBoundsInScreen(boundsInScreen);
 
+        String viewResourceId = getViewResourceId(source);
+
         Log.v(TAG, String.format("[SourceClass] %s [ViewId] %s [BoundsInParent] (%s, %s, %s, %s) " +
                         "[BoundsInScreen] (%s, %s, %s, %s)",
-                source.getClassName().toString(), source.getViewIdResourceName(),
+                source.getClassName().toString(), viewResourceId,
                 boundsInParent.top, boundsInParent.left, boundsInParent.bottom, boundsInParent.right,
                 boundsInScreen.top, boundsInScreen.left, boundsInScreen.bottom, boundsInScreen.right));
 
@@ -99,6 +103,26 @@ public class InteractionService extends AccessibilityService {
         source.recycle();
     }
 
+    @Override
+    protected void onServiceConnected() {
+        super.onServiceConnected();
+        Log.v(TAG, "onServiceConnected"+" - SDK: " + Build.VERSION.SDK_INT);
+//        try {
+//            accLogger = new AccLogger(this);
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
+
+    }
+
+    protected String getViewResourceId(AccessibilityNodeInfo info){
+        String viewResourceId = "";
+        if(Build.VERSION.SDK_INT >=18){
+            viewResourceId = info.getViewIdResourceName();
+        }
+        return viewResourceId;
+    }
 
     protected boolean isMonitored(String pName, String[] pkgNames){
         for(int i=0; i<pkgNames.length;i++){
@@ -109,7 +133,7 @@ public class InteractionService extends AccessibilityService {
 
     protected void recycle(AccessibilityNodeInfo info, int level) {
         String levelInfo = generateLevel(level);
-        Log.i(TAG, levelInfo+ "[ClassName] "+ info.getClassName()+ " [ViewId] "+info.getViewIdResourceName()+
+        Log.i(TAG, levelInfo+ "[ClassName] "+ info.getClassName()+ " [ViewId] "+this.getViewResourceId(info)+
                 " [Text] "+ info.getText() + " [WINDOW_ID] "+ info.getWindowId());
 
         if(info.getChildCount()!=0){
@@ -202,19 +226,6 @@ public class InteractionService extends AccessibilityService {
     @Override
     public void onInterrupt() {
         Log.v(TAG, "onInterrupt");
-    }
-
-    @Override
-    protected void onServiceConnected() {
-        super.onServiceConnected();
-        Log.v(TAG, "onServiceConnected");
-//        try {
-//            accLogger = new AccLogger(this);
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
-
     }
 
     private String getPkgNames(String[] names){
