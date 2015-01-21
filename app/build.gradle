@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "edu.uml.swin.logger"
-        minSdkVersion 14
-        targetSdkVersion 21
+        minSdkVersion 18
+        targetSdkVersion 18
         versionCode 1
         versionName "1.0"
     }
