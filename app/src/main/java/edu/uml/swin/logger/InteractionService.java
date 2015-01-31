@@ -2,6 +2,8 @@ package edu.uml.swin.logger;
 
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Rect;
 import android.view.accessibility.AccessibilityEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
@@ -10,16 +12,20 @@ import android.os.Build;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.io.IOException;
+import edu.uml.swin.logger.LogContract.LogEntry;
 
 
 public class InteractionService extends AccessibilityService {
 
     static final String TAG = "InteractionService";
     private AccLogger accLogger;
+    private SQLiteDatabase db;
     private String[] pkgNames = {"com.android.launcher", "com.skcc.corfire.dd", "org.tasks", "com.example.android.notepad"};
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        long sTimeStamp = System.currentTimeMillis();
+
 //        if(getEventType(event).equalsIgnoreCase("Default")) return;
         AccessibilityNodeInfo source = event.getSource();
         if(source == null){
@@ -45,7 +51,6 @@ public class InteractionService extends AccessibilityService {
 
         String cName = event.getClassName().toString();
         long timeStamp = event.getEventTime();
-        long sTimeStamp = System.currentTimeMillis();
         String eText = getEventText(event);
         int windowId = event.getWindowId();
         int[] indices = getIndex(event,eText);
@@ -59,14 +64,19 @@ public class InteractionService extends AccessibilityService {
         Rect boundsInParent = new Rect();
         Rect boundsInScreen = new Rect();
 
+        String sourceName = source.getClassName().toString();
         source.getBoundsInParent(boundsInParent);
         source.getBoundsInScreen(boundsInScreen);
 
         String viewResourceId = getViewResourceId(source);
+        StringBuilder pBounds = new StringBuilder();
+        StringBuilder sBounds = new StringBuilder();
+        pBounds.append(String.format("%s, %s, %s, %s", boundsInParent.top, boundsInParent.left, boundsInParent.bottom, boundsInParent.right));
+        sBounds.append(String.format("%s, %s, %s, %s", boundsInScreen.top, boundsInScreen.left, boundsInScreen.bottom, boundsInScreen.right));
 
         Log.v(TAG, String.format("[SourceClass] %s [ViewId] %s [BoundsInParent] (%s, %s, %s, %s) " +
                         "[BoundsInScreen] (%s, %s, %s, %s)",
-                source.getClassName().toString(), viewResourceId,
+                sourceName, viewResourceId,
                 boundsInParent.top, boundsInParent.left, boundsInParent.bottom, boundsInParent.right,
                 boundsInScreen.top, boundsInScreen.left, boundsInScreen.bottom, boundsInScreen.right));
 
@@ -89,6 +99,8 @@ public class InteractionService extends AccessibilityService {
                 this.accLogger.stop();
             }
         }*/
+        String windowInfo = null;
+        StringBuilder sb = new StringBuilder();
         if(eType.equalsIgnoreCase("TYPE_VIEW_CLICKED")) {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if(rootNode == null){
@@ -96,10 +108,30 @@ public class InteractionService extends AccessibilityService {
                 return;
             }
             else{
-                recycle(rootNode, 1);
+                recycle(sb, rootNode, 1);
+                windowInfo = sb.toString();
             }
             Log.v(TAG,"============================================");
         }
+        ContentValues values = new ContentValues();
+        values.put(LogEntry.COLUMN_NAME_EVENT_TYPE , eType);
+        values.put(LogEntry.COLUMN_NAME_EVENT_SOURCE, cName);
+        values.put(LogEntry.COLUMN_NAME_PKG_NAME, pName);
+        values.put(LogEntry.COLUMN_NAME_EVENT_TIME, timeStamp);
+        values.put(LogEntry.COLUMN_NAME_SYSTEM_TIME, sTimeStamp);
+        values.put(LogEntry.COLUMN_NAME_EVENT_TEXT, eText);
+        values.put(LogEntry.COLUMN_NAME_WINDOW_ID, windowId);
+        values.put(LogEntry.COLUMN_NAME_INDEX_ZERO, indices[0]);
+        values.put(LogEntry.COLUMN_NAME_INDEX_ONE, indices[1]);
+        values.put(LogEntry.COLUMN_NAME_INDEX_TWO, indices[2]);
+        values.put(LogEntry.COLUMN_NAME_SOURCE_CLASS, sourceName);
+        values.put(LogEntry.COLUMN_NAME_VIEW_RESOURCE_ID, viewResourceId);
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_PARENT, pBounds.toString());
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN, sBounds.toString());
+        values.put(LogEntry.COLUMN_NAME_WINDOW_INFO, windowInfo);
+        long newRowId;
+        newRowId = db.insert(LogEntry.EVENT_TABLE_NAME,null,values);
+
         source.recycle();
     }
 
@@ -113,7 +145,8 @@ public class InteractionService extends AccessibilityService {
 //        catch (Exception e){
 //            e.printStackTrace();
 //        }
-
+        LogDbHelper lDbHelper = new LogDbHelper(this);
+        db = lDbHelper.getWritableDatabase();
     }
 
     protected String getViewResourceId(AccessibilityNodeInfo info){
@@ -131,15 +164,19 @@ public class InteractionService extends AccessibilityService {
         return false;
     }
 
-    protected void recycle(AccessibilityNodeInfo info, int level) {
+    protected void recycle(StringBuilder sb, AccessibilityNodeInfo info, int level) {
         String levelInfo = generateLevel(level);
-        Log.i(TAG, levelInfo+ "[ClassName] "+ info.getClassName()+ " [ViewId] "+this.getViewResourceId(info)+
+        sb.append(levelInfo);
+        sb.append("[ClassName] "+ info.getClassName()+ " [ViewId] "+this.getViewResourceId(info)+
                 " [Text] "+ info.getText() + " [WINDOW_ID] "+ info.getWindowId());
+        sb.append("\n");
+        Log.i(TAG, levelInfo + "[ClassName] " + info.getClassName() + " [ViewId] " + this.getViewResourceId(info) +
+                " [Text] " + info.getText() + " [WINDOW_ID] " + info.getWindowId());
 
         if(info.getChildCount()!=0){
             for (int i = 0; i < info.getChildCount(); i++) {
                 if(info.getChild(i)!=null){
-                    recycle(info.getChild(i), level + 1);
+                    recycle(sb, info.getChild(i), level + 1);
                 }
             }
         }
