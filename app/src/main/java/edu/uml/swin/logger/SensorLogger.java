@@ -16,30 +16,35 @@ import java.io.PrintWriter;
 /**
  * Created by jing on 1/19/15.
  */
-public class AccLogger extends Task {
-    private static final String TAG = "InteractionService/AccLogger";
+public class SensorLogger extends Task {
+    private static final String TAG = "InteractionService/SensorLogger";
     private static final String APP_DIR = "AccessibilityData";
     private SensorManager sensorManager;
     private Sensor senAccelerometer;
+    private Sensor senGyroscope;
     private SensorEventListener sensorListener;
-    File outputFile;
-    PrintWriter pw;
+    File accOutput;
+    File gyroOutput;
+    PrintWriter accPw;
+    PrintWriter gyroPw;
     File appDir;
 
-    public AccLogger(Context ctx) throws IOException {
+    public SensorLogger(Context ctx) throws IOException {
         super(ctx);
         sensorManager = (SensorManager)ctx.getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        senGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
+                long t = System.currentTimeMillis();
+
                 Sensor mySensor = sensorEvent.sensor;
 
                 if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     float x = sensorEvent.values[0];
                     float y = sensorEvent.values[1];
                     float z = sensorEvent.values[2];
-                    long t = System.currentTimeMillis();
 //                    Log.v(TAG,String.format("(%s, %s, %s, %s)", x, y, z, t));
                     StringBuilder sb = new StringBuilder();
                     sb.append(x+", ");
@@ -47,12 +52,31 @@ public class AccLogger extends Task {
                     sb.append(z+", ");
                     sb.append(t+"\n");
                     try {
-                        pw.print(sb.toString());
+                        accPw.print(sb.toString());
 //                        outputStream.flush();
                     }
                     catch (Exception e){
                         e.printStackTrace();
                     }
+                }
+                if (mySensor.getType() == Sensor.TYPE_GYROSCOPE){
+                    float x = sensorEvent.values[0];
+                    float y = sensorEvent.values[1];
+                    float z = sensorEvent.values[2];
+//                    Log.v(TAG,String.format("(%s, %s, %s, %s)", x, y, z, t));
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(x+", ");
+                    sb.append(y+", ");
+                    sb.append(z+", ");
+                    sb.append(t+"\n");
+                    try {
+                        gyroPw.print(sb.toString());
+//                        outputStream.flush();
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
+
                 }
             }
             @Override
@@ -86,15 +110,27 @@ public class AccLogger extends Task {
     protected void onStart()  {
         Log.d(TAG, "onStart");
         sensorManager.registerListener(sensorListener,senAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        outputFile = new File(appDir,"acc");
-        if(outputFile.exists()){
-            Log.v(TAG, "acc File exists.");
+        sensorManager.registerListener(sensorListener,senGyroscope,SensorManager.SENSOR_DELAY_FASTEST);
+        long timestamp = System.currentTimeMillis();
+        String accFileName = "acc" + timestamp;
+        String gyroFileName = "gyro" + timestamp;
+        accOutput = new File(appDir,accFileName);
+        gyroOutput = new File(appDir, gyroFileName);
+        if(accOutput.exists()){
+            Log.v(TAG, "acc file exists.");
         }
         else{
-            Log.v(TAG, "acc File does not exist and to be created.");
+            Log.v(TAG, "acc file does not exist and to be created.");
+        }
+        if(gyroOutput.exists()){
+            Log.v(TAG, "gyro file exists.");
+        }
+        else{
+            Log.v(TAG, "gyro file does not exist and to be created.");
         }
         try {
-            pw = new PrintWriter(new FileOutputStream(outputFile));
+            accPw = new PrintWriter(new FileOutputStream(accOutput));
+            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput));
         }
         catch (Exception e){
             e.printStackTrace();
@@ -106,7 +142,8 @@ public class AccLogger extends Task {
         Log.d(TAG, "onStop");
         sensorManager.unregisterListener(sensorListener);
         try {
-            pw.close();
+            accPw.close();
+            gyroPw.close();
         }
         catch (Exception e){
             e.printStackTrace();
