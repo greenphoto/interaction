@@ -13,7 +13,9 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.text.SimpleDateFormat;
 
 import edu.uml.swin.logger.LogContract.LogEntry;
 
@@ -25,6 +27,7 @@ public class InteractionService extends AccessibilityService {
     private SQLiteDatabase db;
     private String currentLogEntry = "";
     private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.example.android.notepad"};
+    private boolean sensorStopped = true;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -37,7 +40,6 @@ public class InteractionService extends AccessibilityService {
         AccessibilityNodeInfo source = event.getSource();
         if(source == null){
             currentLogEntry = "Failed to get source.";
-            Log.v(TAG, currentLogEntry);
             saveLogEntry(debugInfo, currentLogEntry);
             return;
         }
@@ -51,8 +53,11 @@ public class InteractionService extends AccessibilityService {
         if(!isMonitored(pName,pkgNames)){
             if(eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
                 this.sensorLogger.stop();
-                currentLogEntry = "Switch to unmonitored package, stop sensor logger.";
-                saveLogEntry(debugInfo, currentLogEntry);
+                if(sensorStopped == false) {
+                    currentLogEntry = "Switch to unmonitored package " + pName + ", stop sensor logger.";
+                    saveLogEntry(debugInfo, currentLogEntry);
+                    sensorStopped = true;
+                }
             }
             else{
                 this.sensorLogger.stop();
@@ -105,8 +110,11 @@ public class InteractionService extends AccessibilityService {
         if (eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
             if(isMonitored(pName, pkgNames)){
                 this.sensorLogger.start();
-                currentLogEntry = "Switch to monitored package, start sensor logger.";
-                saveLogEntry(debugInfo, currentLogEntry);
+                if(sensorStopped == true) {
+                    currentLogEntry = "Switch to monitored package, start sensor logger.";
+                    saveLogEntry(debugInfo, currentLogEntry);
+                    sensorStopped = false;
+                }
             }
             else{
                 this.sensorLogger.stop();
@@ -118,7 +126,6 @@ public class InteractionService extends AccessibilityService {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if(rootNode == null){
                 currentLogEntry = "Root node info is null.";
-                Log.v(TAG, currentLogEntry);
                 saveLogEntry(debugInfo, currentLogEntry);
                 return;
             }
@@ -128,12 +135,16 @@ public class InteractionService extends AccessibilityService {
             }
 
         }
+
         ContentValues values = new ContentValues();
         values.put(LogEntry.COLUMN_NAME_EVENT_TYPE , eType);
         values.put(LogEntry.COLUMN_NAME_EVENT_SOURCE, cName);
         values.put(LogEntry.COLUMN_NAME_PKG_NAME, pName);
         values.put(LogEntry.COLUMN_NAME_EVENT_TIME, timeStamp);
         values.put(LogEntry.COLUMN_NAME_SYSTEM_TIME, sTimeStamp);
+
+        String readableTime = Utils.getReadableTime(sTimeStamp);
+        values.put(LogEntry.COLUMN_NAME_CALENDAR_TIME, readableTime);
         values.put(LogEntry.COLUMN_NAME_EVENT_TEXT, eText);
         values.put(LogEntry.COLUMN_NAME_WINDOW_ID, windowId);
         values.put(LogEntry.COLUMN_NAME_INDEX_ZERO, indices[0]);
@@ -154,18 +165,22 @@ public class InteractionService extends AccessibilityService {
     }
 
     private void saveLogEntry(ArrayList<String> debug, String curr){
+        Log.v(TAG, curr);
         debug.add(curr);
     }
 
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        long sTimeStamp = System.currentTimeMillis();
 
         LogDbHelper lDbHelper = new LogDbHelper(this);
         db = lDbHelper.getWritableDatabase();
-        Log.v(TAG, db.getPath());
 
-        long sTimeStamp = System.currentTimeMillis();
+        currentLogEntry = "DB Path: " + db.getPath();
+        Log.v(TAG, currentLogEntry);
+        writeToDebugDB(sTimeStamp, currentLogEntry);
+
         currentLogEntry = "onServiceConnected"+" - SDK: " + Build.VERSION.SDK_INT;
         Log.v(TAG, currentLogEntry);
         writeToDebugDB(sTimeStamp, currentLogEntry);
@@ -303,6 +318,7 @@ public class InteractionService extends AccessibilityService {
         values.put(LogEntry.COLUMN_NAME_DEBUG_INFO, entry);
         db.insert(LogEntry.DEBUG_INFO_TABLE_NAME, null, values);
     }
+
     private String getPkgNames(String[] names){
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < names.length; ++i){
@@ -319,5 +335,8 @@ public class InteractionService extends AccessibilityService {
         if(sensorLogger != null){
             sensorLogger.stop();
         }
+        long sTimeStamp = System.currentTimeMillis();
+        currentLogEntry = "OnDestroy and stop sensor logger";
+        writeToDebugDB(sTimeStamp,currentLogEntry);
     }
 }

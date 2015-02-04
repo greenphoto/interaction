@@ -12,17 +12,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 /**
  * Created by jing on 1/19/15.
  */
 public class SensorLogger extends Task {
     private static final String TAG = "InteractionService/SensorLogger";
-    private static final String APP_DIR = "AccessibilityData";
+    private static final String APP_DIR = "InteractionLoggerSensorData";
     private SensorManager sensorManager;
     private Sensor senAccelerometer;
     private Sensor senGyroscope;
     private SensorEventListener sensorListener;
+    private LogDbHelper dbHelper;
+    private DBUtil dbWriter;
+    private String currentLogEntry = "";
     File accOutput;
     File gyroOutput;
     PrintWriter accPw;
@@ -34,6 +38,10 @@ public class SensorLogger extends Task {
         sensorManager = (SensorManager)ctx.getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        dbHelper = new LogDbHelper(ctx);
+        dbWriter = new DBUtil(dbHelper);
+
         sensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
@@ -84,50 +92,60 @@ public class SensorLogger extends Task {
 
             }
         };
+
+        long sTime = System.currentTimeMillis();
+        ArrayList<String> debugInfo = new ArrayList<String>();
+
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)){
-            Log.v(TAG, "External storage is writable.");
+            currentLogEntry = "External storage is writable.";
+            Log.v(TAG, currentLogEntry);
+            debugInfo.add(currentLogEntry);
+
             appDir = Environment.getExternalStoragePublicDirectory(APP_DIR);
             if(!appDir.exists()){
                 if(!appDir.mkdir()){
-                    Log.v(TAG, "Directory not created");
-                    throw new IOException("Directory not created");
+                    currentLogEntry = "Sensor data directory failed to create.";
+                    saveLogEntry(debugInfo, currentLogEntry);
+
+                    throw new IOException(currentLogEntry);
                 }
             }
             else{
-                Log.v(TAG, "Directory existed or created.");
+                currentLogEntry = "Sensor data directory already existed or succeeded to create.";
+                saveLogEntry(debugInfo, currentLogEntry);
             }
         }
         else{
-            Log.v(TAG, "External storage is not writable.");
-            throw new IOException("External storage is not writable.");
+            currentLogEntry = "External storage is not writable.";
+            saveLogEntry(debugInfo, currentLogEntry);
+
         }
-
-    }
-
-
-    @Override
-    protected void onStart()  {
-        Log.d(TAG, "onStart");
-        sensorManager.registerListener(sensorListener,senAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(sensorListener,senGyroscope,SensorManager.SENSOR_DELAY_FASTEST);
-        long timestamp = System.currentTimeMillis();
-        String accFileName = "acc" + timestamp;
-        String gyroFileName = "gyro" + timestamp;
+        String accFileName = "acc"; //+ timestamp;
+        String gyroFileName = "gyro";// + timestamp;
         accOutput = new File(appDir,accFileName);
         gyroOutput = new File(appDir, gyroFileName);
         if(accOutput.exists()){
-            Log.v(TAG, "acc file exists.");
+            currentLogEntry = "Acc data file already exists.";
+            saveLogEntry(debugInfo, currentLogEntry);
         }
         else{
-            Log.v(TAG, "acc file does not exist and to be created.");
+            currentLogEntry = "Acc data file does not exist and will be created.";
+            saveLogEntry(debugInfo, currentLogEntry);
         }
         if(gyroOutput.exists()){
-            Log.v(TAG, "gyro file exists.");
+            currentLogEntry = "Gyro data file already exists.";
+            saveLogEntry(debugInfo, currentLogEntry);
         }
         else{
-            Log.v(TAG, "gyro file does not exist and to be created.");
+            currentLogEntry = "Gyro data file does not exist and will be created.";
+            saveLogEntry(debugInfo, currentLogEntry);
         }
+
+        for (String s: debugInfo){
+            dbWriter.writeToDebugDB(sTime, s);
+        }
+
         try {
             accPw = new PrintWriter(new FileOutputStream(accOutput));
             gyroPw = new PrintWriter(new FileOutputStream(gyroOutput));
@@ -137,12 +155,34 @@ public class SensorLogger extends Task {
         }
     }
 
+    private void saveLogEntry(ArrayList<String> debug, String curr){
+        Log.v(TAG, curr);
+        debug.add(curr);
+    }
+
+    @Override
+    protected void onStart()  {
+        long timestamp = System.currentTimeMillis();
+        currentLogEntry = "Sensor logger on start.";
+        dbWriter.writeToDebugDB(timestamp, currentLogEntry);
+
+        sensorManager.registerListener(sensorListener,senAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(sensorListener,senGyroscope,SensorManager.SENSOR_DELAY_FASTEST);
+    }
+
     @Override
     protected void onStop() {
-        Log.d(TAG, "onStop");
+        long timestamp = System.currentTimeMillis();
+        currentLogEntry = "Sensor logger on stop.";
+
+        Log.d(TAG, currentLogEntry);
+        dbWriter.writeToDebugDB(timestamp, currentLogEntry);
+
         sensorManager.unregisterListener(sensorListener);
         try {
+            accPw.flush();
             accPw.close();
+            gyroPw.flush();
             gyroPw.close();
         }
         catch (Exception e){

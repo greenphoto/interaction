@@ -20,6 +20,7 @@ public final class LogContract {
         public static final String COLUMN_NAME_PKG_NAME = "pkg_name";
         public static final String COLUMN_NAME_EVENT_TIME = "event_time";
         public static final String COLUMN_NAME_SYSTEM_TIME = "sys_time";
+        public static final String COLUMN_NAME_CALENDAR_TIME = "calendar_time";
         public static final String COLUMN_NAME_EVENT_TEXT = "event_text";
         public static final String COLUMN_NAME_WINDOW_ID = "window_id";
         public static final String COLUMN_NAME_INDEX_ZERO = "index_0";

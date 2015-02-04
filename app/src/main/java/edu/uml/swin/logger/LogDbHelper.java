@@ -23,6 +23,7 @@ public class LogDbHelper extends SQLiteOpenHelper {
             + LogEntry.COLUMN_NAME_EVENT_TYPE + TEXT_TYPES+ COMMA_SEP
             + LogEntry.COLUMN_NAME_EVENT_SOURCE + TEXT_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_PKG_NAME + TEXT_TYPES + COMMA_SEP
+            + LogEntry.COLUMN_NAME_CALENDAR_TIME + TEXT_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_EVENT_TIME + INTEGER_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_SYSTEM_TIME + INTEGER_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_EVENT_TEXT + TEXT_TYPES + COMMA_SEP
@@ -36,8 +37,9 @@ public class LogDbHelper extends SQLiteOpenHelper {
             + LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN + TEXT_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_WINDOW_INFO + TEXT_TYPES + " )";
 
-    private static final String SQL_CREATE_DEBUG_INFO_TABLE = "CREATE TABLE " + LogEntry.DEBUG_INFO_TABLE_NAME + " ("
+    private static final String SQL_CREATE_DEBUG_INFO_TABLE = "CREATE TABLE IF NOT EXISTS " + LogEntry.DEBUG_INFO_TABLE_NAME + " ("
             + LogEntry.COLUMN_NAME_SYSTEM_TIME + INTEGER_TYPES + COMMA_SEP
+            + LogEntry.COLUMN_NAME_CALENDAR_TIME + TEXT_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_DEBUG_INFO + TEXT_TYPES + " )";
 
     private static final String SQL_DELETE_DEBUG_INFO_TABLE = "DROP TABLE IF EXISTS " + LogEntry.DEBUG_INFO_TABLE_NAME;
