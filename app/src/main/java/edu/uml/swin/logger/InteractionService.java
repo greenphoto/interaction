@@ -315,6 +315,8 @@ public class InteractionService extends AccessibilityService {
     private void writeToDebugDB(long sysTime, String entry){
         ContentValues values = new ContentValues();
         values.put(LogEntry.COLUMN_NAME_SYSTEM_TIME, sysTime);
+        String readableTime = Utils.getReadableTime(sysTime);
+        values.put(LogEntry.COLUMN_NAME_CALENDAR_TIME, readableTime);
         values.put(LogEntry.COLUMN_NAME_DEBUG_INFO, entry);
         db.insert(LogEntry.DEBUG_INFO_TABLE_NAME, null, values);
     }
