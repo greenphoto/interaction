@@ -129,6 +129,7 @@ public class InteractionService extends AccessibilityService {
         values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_PARENT, pBounds.toString());
         values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN, sBounds.toString());
         values.put(LogEntry.COLUMN_NAME_WINDOW_INFO, windowInfo);
+
         long newRowId;
         newRowId = db.insert(LogEntry.EVENT_TABLE_NAME,null,values);
 
