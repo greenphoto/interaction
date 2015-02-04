@@ -13,9 +13,11 @@ public class LogDbHelper extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "interactionLog.db";
 
+
     private static final String TEXT_TYPES = " TEXT";
     private static final String INTEGER_TYPES = " INTEGER";
     private static final String COMMA_SEP = " , ";
+
     private static final String SQL_CREATE_EVENT_TABLE = "CREATE TABLE " + LogEntry.EVENT_TABLE_NAME
             + " (" + LogEntry._ID + " INTEGER PRIMARY KEY, "
             + LogEntry.COLUMN_NAME_EVENT_TYPE + TEXT_TYPES+ COMMA_SEP
@@ -34,6 +36,12 @@ public class LogDbHelper extends SQLiteOpenHelper {
             + LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN + TEXT_TYPES + COMMA_SEP
             + LogEntry.COLUMN_NAME_WINDOW_INFO + TEXT_TYPES + " )";
 
+    private static final String SQL_CREATE_DEBUG_INFO_TABLE = "CREATE TABLE " + LogEntry.DEBUG_INFO_TABLE_NAME + " ("
+            + LogEntry.COLUMN_NAME_SYSTEM_TIME + INTEGER_TYPES + COMMA_SEP
+            + LogEntry.COLUMN_NAME_DEBUG_INFO + TEXT_TYPES + " )";
+
+    private static final String SQL_DELETE_DEBUG_INFO_TABLE = "DROP TABLE IF EXISTS " + LogEntry.DEBUG_INFO_TABLE_NAME;
+
     private static final String SQL_DELETE_EVENT_TABLE = "DROP TABLE IF EXISTS " + LogEntry.EVENT_TABLE_NAME;
 
     public LogDbHelper (Context context){
@@ -43,6 +51,7 @@ public class LogDbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_EVENT_TABLE);
+        db.execSQL(SQL_CREATE_DEBUG_INFO_TABLE);
     }
 
     @Override

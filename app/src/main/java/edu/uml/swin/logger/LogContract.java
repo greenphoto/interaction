@@ -11,7 +11,9 @@ public final class LogContract {
 
     public static abstract class LogEntry implements BaseColumns{
         public static final String EVENT_TABLE_NAME = "events";
-//        public static final String WINDOW_TABLE_NAME = "windows";
+        public static final String DEBUG_INFO_TABLE_NAME = "debug";
+
+        public static final String COLUMN_NAME_DEBUG_INFO = "debug_info";
 
         public static final String COLUMN_NAME_EVENT_TYPE = "event_type";
         public static final String COLUMN_NAME_EVENT_SOURCE = "event_source";
