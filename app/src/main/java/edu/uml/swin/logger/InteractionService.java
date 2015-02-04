@@ -18,9 +18,9 @@ import edu.uml.swin.logger.LogContract.LogEntry;
 public class InteractionService extends AccessibilityService {
 
     static final String TAG = "InteractionService";
-    private AccLogger accLogger;
+    private SensorLogger sensorLogger;
     private SQLiteDatabase db;
-    private String[] pkgNames = {"com.android.launcher", "com.skcc.corfire.dd", "org.tasks", "com.example.android.notepad"};
+    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.example.android.notepad"};
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -36,15 +36,15 @@ public class InteractionService extends AccessibilityService {
         if(eType.equalsIgnoreCase("TYPE_WINDOW_CONTENT_CHANGED")) return;
 
         /*
-         *If the event came from an new unmonitored package, stop accLogger and skip
+         *If the event came from an new unmonitored package, stop sensorLogger and skip
           */
         String pName = event.getPackageName().toString();
         if(!isMonitored(pName,pkgNames)){
             if(eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
-//                this.accLogger.stop();
+                this.sensorLogger.stop();
             }
             else{
-//                this.accLogger.stop();
+                this.sensorLogger.stop();
                 return;
             }
         }
@@ -89,16 +89,16 @@ public class InteractionService extends AccessibilityService {
         Log.v(TAG,"--------------parents------------------");
 
         /**
-         * Invoke AccLogger if the launched activity is in monitored packages.
+         * Invoke sensorLogger if the launched activity is in monitored packages.
          */
-/*        if (eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
+        if (eType.equalsIgnoreCase("TYPE_WINDOW_STATE_CHANGED")){
             if(isMonitored(pName, pkgNames)){
-                this.accLogger.start();
+                this.sensorLogger.start();
             }
             else{
-                this.accLogger.stop();
+                this.sensorLogger.stop();
             }
-        }*/
+        }
         String windowInfo = null;
         StringBuilder sb = new StringBuilder();
         if(eType.equalsIgnoreCase("TYPE_VIEW_CLICKED")) {
@@ -140,14 +140,16 @@ public class InteractionService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         Log.v(TAG, "onServiceConnected"+" - SDK: " + Build.VERSION.SDK_INT);
-//        try {
-//            accLogger = new AccLogger(this);
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
+        try {
+            sensorLogger = new SensorLogger(this);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
         LogDbHelper lDbHelper = new LogDbHelper(this);
         db = lDbHelper.getWritableDatabase();
+        Log.v(TAG, db.getPath());
+
     }
 
     protected String getViewResourceId(AccessibilityNodeInfo info){
@@ -279,8 +281,8 @@ public class InteractionService extends AccessibilityService {
 
     @Override
     public void onDestroy(){
-        if(accLogger != null){
-            accLogger.stop();
+        if(sensorLogger != null){
+            sensorLogger.stop();
         }
     }
 }
