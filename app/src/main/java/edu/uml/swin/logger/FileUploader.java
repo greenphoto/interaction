@@ -32,7 +32,7 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 
     private Context mContext;
 	private ConnectionDetector mConnectionDetector;
-    private LogDbHelper mlogDbHelper;
+    private LogDbHelper logDbHelper;
 
 	private static int BUFFER_SIZE = 1024;
 
@@ -41,7 +41,7 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 	public FileUploader(Context context) {
 		mContext = context;
     	mConnectionDetector = new ConnectionDetector(mContext);
-        mlogDbHelper = new LogDbHelper(context);
+        logDbHelper = new LogDbHelper(context);
 	}
 	
 	@Override
@@ -57,7 +57,7 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 	@Override
 	protected String doInBackground(Void... params) {
         String message = "Oops, there must be something wrong.\n";
-        SQLiteDatabase db = mlogDbHelper.getWritableDatabase();
+        SQLiteDatabase db = logDbHelper.getWritableDatabase();
 		String DB_PATH = db.getPath();
 //		if (android.os.Build.VERSION.SDK_INT >= 4.2) {
 //	    	DB_PATH = mContext.getApplicationInfo().dataDir + "/databases/";
@@ -100,16 +100,16 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 			
 			if (resEntity != null) {
 				String responseStr = EntityUtils.toString(resEntity).trim();
-				Log.d(TAG, "Upload file received response: " + responseStr);
+				Log.d(TAG, "File uploader received response: " + responseStr);
 //				if (responseStr.equals("success")) {
 //					updateUploadTime();
 //				}
-                message = "Upload file received response: " + responseStr + ".\n";
+                message = "File uploader received response: " + responseStr + ".\n";
                 resEntity.consumeContent();
 			} else {
-				Log.d(TAG, "Upload file got no response from remote server");
+				Log.d(TAG, "File uploader got no response from remote server");
 
-                message = "Oops, upload file got no response from remote server.\n";
+                message = "Oops, file uploader got no response from remote server.\n";
 			}
 
 			httpClient.getConnectionManager().shutdown();
