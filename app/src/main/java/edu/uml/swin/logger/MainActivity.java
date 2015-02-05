@@ -1,19 +1,56 @@
 package edu.uml.swin.logger;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import java.io.File;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements IApiAccessUploadResponse{
+
+    private TextView messageText;
+    private Button uploadButton;
+    private String uploadResult;
+
+    ProgressDialog dialog = null;
+    String upLoadServerUri = null;
+
+    FileUploader uploader = null;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        uploader = new FileUploader(this);
+        uploader.delegate = this;
+
+        uploadButton = (Button) findViewById(R.id.uploadButton);
+        messageText = (TextView) findViewById(R.id.messageText);
+
+        uploadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog = ProgressDialog.show(MainActivity.this, "", "Uploading file...", true);
+                messageText.setText("Uploading started...");
+                uploader.execute();
+                dialog.dismiss();
+                messageText.setText(uploadResult);
+            }
+        });
     }
 
+    public void postResult(String asyncResult){
+        uploadResult = asyncResult;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
