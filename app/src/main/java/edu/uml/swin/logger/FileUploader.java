@@ -83,21 +83,24 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
                 message = "Database has not been created, cancel uploading.\n";
 				Log.d(TAG, "Database has not been created, cancel uploading.");
 				httpClient.getConnectionManager().shutdown();
-				return null;
+				return message;
 			}
+
 			FileBody fileBody = new FileBody(file);
 			
 			// Build the post 
 			MultipartEntityBuilder reqEntity = MultipartEntityBuilder.create();
 			reqEntity.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 			reqEntity.addPart("file", fileBody);
-			reqEntity.addTextBody("newFileName", Utils.getTimeAsFileName() + ".zip");
+			reqEntity.addTextBody("fileName", Utils.getTimeAsFileName() + ".zip");
 			httpPost.setEntity(reqEntity.build());
 			
 			// execute HTTP post request
 			HttpResponse response = httpClient.execute(httpPost);
 			HttpEntity resEntity = response.getEntity();
-			
+
+            Log.d(TAG, "========== Status code = " + response.getStatusLine().getStatusCode());
+
 			if (resEntity != null) {
 				String responseStr = EntityUtils.toString(resEntity).trim();
 				Log.d(TAG, "File uploader received response: " + responseStr);

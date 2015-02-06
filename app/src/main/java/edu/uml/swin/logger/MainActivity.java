@@ -42,14 +42,14 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
                 dialog = ProgressDialog.show(MainActivity.this, "", "Uploading file...", true);
                 messageText.setText("Uploading started...");
                 uploader.execute();
-                dialog.dismiss();
-                messageText.setText(uploadResult);
+                messageText.setText(uploadResult+"!!!");
             }
         });
     }
 
     public void postResult(String asyncResult){
         uploadResult = asyncResult;
+        dialog.dismiss();
     }
 
     @Override
