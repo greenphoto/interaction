@@ -22,11 +22,12 @@ import org.apache.http.util.EntityUtils;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Log;
 
 public class FileUploader extends AsyncTask<Void, Void, String> {
 
-    private static String TAG = "InteractionService/FileUploader";
+    public static String TAG = "InteractionService/FileUploader";
 
     public IApiAccessUploadResponse delegate = null;
 
@@ -56,24 +57,24 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 	
 	@Override
 	protected String doInBackground(Void... params) {
-        String message = "Oops, there must be something wrong.\n";
+        String message = "Oops, there must be something wrong.";
+
         SQLiteDatabase db = logDbHelper.getWritableDatabase();
 		String DB_PATH = db.getPath();
-//		if (android.os.Build.VERSION.SDK_INT >= 4.2) {
-//	    	DB_PATH = mContext.getApplicationInfo().dataDir + "/databases/";
-//	    } else {
-//	    	DB_PATH = mContext.getFilesDir().getPath() + "/" + mContext.getPackageName() + "/databases/";
-//	    }
-//		String fullFilePath = DB_PATH + Constants.DB_NAME;
-		//Log.d(Constants.TAG, "filepath = " + fullFilePath); 
+
+        File sensorLogDir = Environment.getExternalStoragePublicDirectory(SensorLogger.APP_DIR);
+        File accFile = new File(sensorLogDir, SensorLogger.accFileName);
+        File gyroFile = new File(sensorLogDir, SensorLogger.gyroFileName);
+
 		String zipFilePath = mContext.getFilesDir() + "/"+ Constants.ZIP_FILE_NAME;
-		String[] files = {DB_PATH};
+
+		String[] files = {DB_PATH, accFile.getPath(), gyroFile.getPath()};
 		try {
 			zip(files, zipFilePath);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
+		message = "Files are zipped.";
 		try {
 			HttpClient httpClient = new DefaultHttpClient();
 			HttpPost httpPost = new HttpPost(Constants.POST_FILE_URL);
@@ -107,12 +108,12 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
 //				if (responseStr.equals("success")) {
 //					updateUploadTime();
 //				}
-                message = "File uploader received response: " + responseStr + ".\n";
+                message = "File uploader received response: " + responseStr + ".";
                 resEntity.consumeContent();
 			} else {
 				Log.d(TAG, "File uploader got no response from remote server");
 
-                message = "Oops, file uploader got no response from remote server.\n";
+                message = "Oops, file uploader got no response from remote server.";
 			}
 
 			httpClient.getConnectionManager().shutdown();
@@ -121,7 +122,7 @@ public class FileUploader extends AsyncTask<Void, Void, String> {
         } catch (Exception e) {
         	e.printStackTrace();
         }
-		
+		message = "Upload succeeded!";
 		return message;
 	}
 	

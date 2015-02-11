@@ -22,7 +22,13 @@ public class Utils {
 
     public static String getTimeAsFileName(){
         long sysTime = System.currentTimeMillis();
-        SimpleDateFormat formatter = new SimpleDateFormat("MM_DD_hh_mm");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_hh_mm");
+        return getReadableTime(formatter, sysTime);
+    }
+
+    public static String getCurrentTime(){
+        long sysTime = System.currentTimeMillis();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
         return getReadableTime(formatter, sysTime);
     }
 }

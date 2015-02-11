@@ -22,7 +22,7 @@ import edu.uml.swin.logger.LogContract.LogEntry;
 
 public class InteractionService extends AccessibilityService {
 
-    static final String TAG = "InteractionService";
+    public static final String TAG = "InteractionService";
     private SensorLogger sensorLogger;
     private SQLiteDatabase db;
     private String currentLogEntry = "";

@@ -19,7 +19,7 @@ import java.util.ArrayList;
  */
 public class SensorLogger extends Task {
     private static final String TAG = "InteractionService/SensorLogger";
-    private static final String APP_DIR = "InteractionLoggerSensorData";
+    protected static final String APP_DIR = "InteractionLoggerSensorData";
     private SensorManager sensorManager;
     private Sensor senAccelerometer;
     private Sensor senGyroscope;
@@ -27,11 +27,13 @@ public class SensorLogger extends Task {
     private LogDbHelper dbHelper;
     private DBUtil dbWriter;
     private String currentLogEntry = "";
-    File accOutput;
-    File gyroOutput;
-    PrintWriter accPw;
-    PrintWriter gyroPw;
-    File appDir;
+    private File accOutput;
+    private File gyroOutput;
+    private PrintWriter accPw;
+    private PrintWriter gyroPw;
+    private File appDir;
+    protected static final String accFileName = "acc"; //+ timestamp;
+    protected static final String gyroFileName = "gyro";// + timestamp;
 
     public SensorLogger(Context ctx) throws IOException {
         super(ctx);
@@ -121,8 +123,7 @@ public class SensorLogger extends Task {
             saveLogEntry(debugInfo, currentLogEntry);
 
         }
-        String accFileName = "acc"; //+ timestamp;
-        String gyroFileName = "gyro";// + timestamp;
+
         accOutput = new File(appDir,accFileName);
         gyroOutput = new File(appDir, gyroFileName);
         if(accOutput.exists()){
@@ -147,8 +148,8 @@ public class SensorLogger extends Task {
         }
 
         try {
-            accPw = new PrintWriter(new FileOutputStream(accOutput));
-            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput));
+            accPw = new PrintWriter(new FileOutputStream(accOutput, true));
+            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput, true));
         }
         catch (Exception e){
             e.printStackTrace();

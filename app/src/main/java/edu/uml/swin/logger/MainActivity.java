@@ -1,8 +1,10 @@
 package edu.uml.swin.logger;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +19,10 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
     private TextView messageText;
     private Button uploadButton;
     private String uploadResult;
+    private Context mySelf;
+    private IApiAccessUploadResponse responseHolder;
+    private String resultMessage="";
+
 
     ProgressDialog dialog = null;
     String upLoadServerUri = null;
@@ -29,26 +35,47 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        uploader = new FileUploader(this);
-        uploader.delegate = this;
+        Log.d("TAG", "in onCreate");
+        mySelf = this;
+        responseHolder = this;
 
         uploadButton = (Button) findViewById(R.id.uploadButton);
         messageText = (TextView) findViewById(R.id.messageText);
+        messageText.setText(resultMessage);
 
         uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog = ProgressDialog.show(MainActivity.this, "", "Uploading file...", true);
-                messageText.setText("Uploading started...");
+
+                uploader = new FileUploader(mySelf);
+                uploader.delegate = responseHolder;
+                resultMessage = "Uploading started...";
+                messageText.setText(resultMessage);
                 uploader.execute();
-                messageText.setText(uploadResult+"!!!");
             }
         });
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Log.d(FileUploader.TAG, "in onResume");
+        messageText.setText(resultMessage);
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        resultMessage = "";
+        Log.d(FileUploader.TAG, "in onPause");
+        messageText.setText(resultMessage);
+    }
+
     public void postResult(String asyncResult){
         uploadResult = asyncResult;
+        resultMessage = Utils.getTimeAsFileName() + " - " + uploadResult;
+        messageText.setText(resultMessage);
         dialog.dismiss();
     }
 
