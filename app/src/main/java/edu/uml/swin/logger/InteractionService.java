@@ -26,7 +26,7 @@ public class InteractionService extends AccessibilityService {
     private SensorLogger sensorLogger;
     private SQLiteDatabase db;
     private String currentLogEntry = "";
-    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.example.android.notepad"};
+    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.dominospizza", "com.mbta.mobileapp"};
     private boolean sensorStopped = true;
 
     @Override
@@ -182,6 +182,10 @@ public class InteractionService extends AccessibilityService {
         writeToDebugDB(sTimeStamp, currentLogEntry);
 
         currentLogEntry = "onServiceConnected"+" - SDK: " + Build.VERSION.SDK_INT;
+        Log.v(TAG, currentLogEntry);
+        writeToDebugDB(sTimeStamp, currentLogEntry);
+
+        currentLogEntry = "Current UUID is : " + Utils.getUUID(this);
         Log.v(TAG, currentLogEntry);
         writeToDebugDB(sTimeStamp, currentLogEntry);
         try {
