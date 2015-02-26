@@ -5,6 +5,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="hello">This user study is to evaluate whether an app is easy to use for novice users.</string>
+    <string name="action_enable_settings">Enable logging</string>
+    <string name="action_disable_settings">Disable setting</string>
 
 
 </resources>

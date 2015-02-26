@@ -168,7 +168,7 @@ public class SensorLogger extends Task {
         dbWriter.writeToDebugDB(timestamp, currentLogEntry);
 
         sensorManager.registerListener(sensorListener,senAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(sensorListener,senGyroscope,SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(sensorListener,senGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override

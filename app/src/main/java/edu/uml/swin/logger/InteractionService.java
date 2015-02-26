@@ -2,9 +2,14 @@ package edu.uml.swin.logger;
 
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Rect;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.util.Log;
@@ -23,14 +28,27 @@ import edu.uml.swin.logger.LogContract.LogEntry;
 public class InteractionService extends AccessibilityService {
 
     public static final String TAG = "InteractionService";
+    public static final String ACTION_ENABLE = "uirecorder_enable";
+    public static final String ACTION_DISABLE = "uirecorder_disable";
     private SensorLogger sensorLogger;
     private SQLiteDatabase db;
     private String currentLogEntry = "";
-    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.dominospizza", "com.mbta.mobileapp"};
+    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.dominospizza", "com.mbta.mobileapp", "com.expedia.bookings"};
     private boolean sensorStopped = true;
+    private static boolean loggingEnabled = false;
 
+    public static boolean isLoggingEnabled(){
+        return loggingEnabled;
+    }
+
+    public static void enableLogging(boolean setting){
+        loggingEnabled = setting;
+    }
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if(!loggingEnabled)
+            return;
+
         long sTimeStamp = System.currentTimeMillis();
 
         ArrayList<String> debugInfo = new ArrayList<String>();
@@ -194,7 +212,6 @@ public class InteractionService extends AccessibilityService {
         catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
     protected String getViewResourceId(AccessibilityNodeInfo info){

@@ -22,7 +22,7 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
     private Context mySelf;
     private IApiAccessUploadResponse responseHolder;
     private String resultMessage="";
-
+    private Menu mMenu;
 
     ProgressDialog dialog = null;
     String upLoadServerUri = null;
@@ -83,6 +83,8 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        mMenu = menu;
+        updateMenuTitle();
         return true;
     }
 
@@ -94,10 +96,25 @@ public class MainActivity extends ActionBarActivity implements IApiAccessUploadR
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_enable_settings) {
+            if(InteractionService.isLoggingEnabled()){
+                InteractionService.enableLogging(false);
+            }else {
+                InteractionService.enableLogging(true);
+            }
+            updateMenuTitle();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateMenuTitle(){
+        MenuItem bedMenuItem = mMenu.findItem(R.id.action_enable_settings);
+        if (InteractionService.isLoggingEnabled()) {
+            bedMenuItem.setTitle("Disable logging");
+        } else {
+            bedMenuItem.setTitle("Enable logging");
+        }
     }
 }
