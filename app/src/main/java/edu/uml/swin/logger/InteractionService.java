@@ -33,7 +33,7 @@ public class InteractionService extends AccessibilityService {
     private SensorLogger sensorLogger;
     private SQLiteDatabase db;
     private String currentLogEntry = "";
-    private String[] pkgNames = {"com.skcc.corfire.dd", "org.tasks", "com.dominospizza", "com.mbta.mobileapp", "com.expedia.bookings"};
+    private String[] pkgNames = {"org.tasks", "com.dominospizza","com.expedia.bookings","com.pinterest", "com.northpark.drinkwater"};
     private boolean sensorStopped = true;
     private static boolean loggingEnabled = false;
 
@@ -230,6 +230,7 @@ public class InteractionService extends AccessibilityService {
     }
 
     protected void recycle(StringBuilder sb, AccessibilityNodeInfo info, int level) {
+        if (info == null) return;
         String levelInfo = generateLevel(level);
         sb.append(levelInfo);
         sb.append("[ClassName] "+ info.getClassName()+ " [ViewId] "+this.getViewResourceId(info)+
