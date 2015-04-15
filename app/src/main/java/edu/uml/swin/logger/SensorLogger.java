@@ -147,13 +147,13 @@ public class SensorLogger extends Task {
             dbWriter.writeToDebugDB(sTime, s);
         }
 
-        try {
-            accPw = new PrintWriter(new FileOutputStream(accOutput, true));
-            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput, true));
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+//        try {
+//            accPw = new PrintWriter(new FileOutputStream(accOutput, true));
+//            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput, true));
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
     }
 
     private void saveLogEntry(ArrayList<String> debug, String curr){
@@ -169,6 +169,14 @@ public class SensorLogger extends Task {
 
         sensorManager.registerListener(sensorListener,senAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
         sensorManager.registerListener(sensorListener,senGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+
+        try {
+            accPw = new PrintWriter(new FileOutputStream(accOutput, true));
+            gyroPw = new PrintWriter(new FileOutputStream(gyroOutput, true));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
