@@ -2,19 +2,26 @@ package edu.uml.swin.logger;
 
 
 import android.accessibilityservice.AccessibilityService;
+import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.util.Log;
 import android.os.Build;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.RemoteViews;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +43,22 @@ public class InteractionService extends AccessibilityService {
     private String[] pkgNames = {"org.tasks", "com.dominospizza","com.expedia.bookings","com.pinterest", "com.northpark.drinkwater"};
     private boolean sensorStopped = true;
     private static boolean loggingEnabled = false;
+    private IntentFilter mMessageFilter;
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long sysTime = System.currentTimeMillis();
+            if (intent.getAction().equals("start_task_msg")) {
+                Log.d(TAG, "=============    Clicked start button");
+                writeStartLogToDB(sysTime);
+
+            } else if (intent.getAction().equals("finish_task_msg")) {
+                Log.d(TAG, "#############    Clicked finish button");
+                writeFinishLogToDB(sysTime);
+            }
+        }
+    };
 
     public static boolean isLoggingEnabled(){
         return loggingEnabled;
@@ -44,6 +67,17 @@ public class InteractionService extends AccessibilityService {
     public static void enableLogging(boolean setting){
         loggingEnabled = setting;
     }
+
+    public void onCreate() {
+        super.onCreate();
+
+        mMessageFilter = new IntentFilter();
+        mMessageFilter.addAction("start_task_msg");
+        mMessageFilter.addAction("finish_task_msg");
+        registerReceiver(mMessageReceiver, mMessageFilter);
+    }
+
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if(!loggingEnabled)
@@ -212,6 +246,8 @@ public class InteractionService extends AccessibilityService {
         catch (Exception e){
             e.printStackTrace();
         }
+
+        startServiceNotification();
     }
 
     protected String getViewResourceId(AccessibilityNodeInfo info){
@@ -343,6 +379,52 @@ public class InteractionService extends AccessibilityService {
         db.insert(LogEntry.DEBUG_INFO_TABLE_NAME, null, values);
     }
 
+    private void writeStartLogToDB(long sysTime){
+        ContentValues values = new ContentValues();
+        values.put(LogEntry.COLUMN_NAME_EVENT_TYPE , "log_start");
+        values.put(LogEntry.COLUMN_NAME_EVENT_SOURCE, "");
+        values.put(LogEntry.COLUMN_NAME_PKG_NAME, "");
+        values.put(LogEntry.COLUMN_NAME_EVENT_TIME, "");
+        values.put(LogEntry.COLUMN_NAME_SYSTEM_TIME, sysTime);
+
+        String readableTime = Utils.getReadableTime(sysTime);
+        values.put(LogEntry.COLUMN_NAME_CALENDAR_TIME, readableTime);
+        values.put(LogEntry.COLUMN_NAME_EVENT_TEXT, "Start Task");
+        values.put(LogEntry.COLUMN_NAME_WINDOW_ID, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_ZERO, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_ONE, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_TWO, "");
+        values.put(LogEntry.COLUMN_NAME_SOURCE_CLASS, "");
+        values.put(LogEntry.COLUMN_NAME_VIEW_RESOURCE_ID, "");
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_PARENT, "");
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN, "");
+        values.put(LogEntry.COLUMN_NAME_WINDOW_INFO, "");
+        db.insert(LogEntry.EVENT_TABLE_NAME,null,values);
+    }
+
+    private void writeFinishLogToDB(long sysTime){
+        ContentValues values = new ContentValues();
+        values.put(LogEntry.COLUMN_NAME_EVENT_TYPE , "log_finish");
+        values.put(LogEntry.COLUMN_NAME_EVENT_SOURCE, "");
+        values.put(LogEntry.COLUMN_NAME_PKG_NAME, "");
+        values.put(LogEntry.COLUMN_NAME_EVENT_TIME, "");
+        values.put(LogEntry.COLUMN_NAME_SYSTEM_TIME, sysTime);
+
+        String readableTime = Utils.getReadableTime(sysTime);
+        values.put(LogEntry.COLUMN_NAME_CALENDAR_TIME, readableTime);
+        values.put(LogEntry.COLUMN_NAME_EVENT_TEXT, "Finish Task");
+        values.put(LogEntry.COLUMN_NAME_WINDOW_ID, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_ZERO, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_ONE, "");
+        values.put(LogEntry.COLUMN_NAME_INDEX_TWO, "");
+        values.put(LogEntry.COLUMN_NAME_SOURCE_CLASS, "");
+        values.put(LogEntry.COLUMN_NAME_VIEW_RESOURCE_ID, "");
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_PARENT, "");
+        values.put(LogEntry.COLUMN_NAME_BOUNDS_IN_SCREEN, "");
+        values.put(LogEntry.COLUMN_NAME_WINDOW_INFO, "");
+        db.insert(LogEntry.EVENT_TABLE_NAME,null,values);
+    }
+
     private String getPkgNames(String[] names){
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < names.length; ++i){
@@ -362,5 +444,40 @@ public class InteractionService extends AccessibilityService {
         long sTimeStamp = System.currentTimeMillis();
         currentLogEntry = "OnDestroy and stop sensor logger";
         writeToDebugDB(sTimeStamp,currentLogEntry);
+
+        stopForeground(true);
+    }
+
+    private void startServiceNotification() {
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        Intent startIntent = new Intent("start_task_msg");
+        Intent finishIntent = new Intent("finish_task_msg");
+        PendingIntent pendingStartIntent = PendingIntent.getBroadcast(this, 0, startIntent, 0);
+        PendingIntent pendingFinishIntent = PendingIntent.getBroadcast(this, 0, finishIntent, 0);
+        remoteViews.setOnClickPendingIntent(R.id.start_button, pendingStartIntent);
+        remoteViews.setOnClickPendingIntent(R.id.finish_button, pendingFinishIntent);
+//        remoteViews.setTextViewText(R.id.title_message,"Please log task start and finish time.");
+
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack
+        stackBuilder.addParentStack(MainActivity.class);
+        // Adds the Intent to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        // Gets a PendingIntent containing the entire back stack
+        //PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContent(remoteViews)
+                .setColor(Color.parseColor("#ffffffff"));
+
+        Notification notification = builder.build();
+//        notification.bigContentView = remoteViews;
+        notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+
+        startForeground(12345, notification);
     }
 }
