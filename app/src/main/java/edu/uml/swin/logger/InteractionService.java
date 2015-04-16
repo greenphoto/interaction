@@ -40,7 +40,7 @@ public class InteractionService extends AccessibilityService {
     private SensorLogger sensorLogger;
     private SQLiteDatabase db;
     private String currentLogEntry = "";
-    private String[] pkgNames = {"org.tasks", "com.dominospizza","com.expedia.bookings","com.pinterest", "com.northpark.drinkwater"};
+    private String[] pkgNames = {"org.tasks", "com.dominospizza","com.expedia.bookings","com.pinterest", "com.northpark.drinkwater","com.dancingdroid.dailysuccess"};
     private boolean sensorStopped = true;
     private static boolean loggingEnabled = false;
     private IntentFilter mMessageFilter;
